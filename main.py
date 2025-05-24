@@ -12,6 +12,7 @@ def download():
     url = request.json.get('url')
     filename = f"{uuid.uuid4()}.mp3"
     filepath = os.path.join(AUDIO_FOLDER, filename)
+    
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': filepath,
@@ -19,12 +20,15 @@ def download():
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
         }],
+        'cookiefile': 'cookies.txt'  # 👈 use your browser cookies
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
-
-    return jsonify({"audio_url": f"/audio/{filename}"})
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        return jsonify({"audio_url": f"/audio/{filename}"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/audio/<path:filename>')
 def serve_audio(filename):
